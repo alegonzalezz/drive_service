@@ -1,0 +1,1 @@
+from adapters.http.vercel.main import app
