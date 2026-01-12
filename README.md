@@ -21,17 +21,189 @@ El propósito de este módulo es permitir que el backend realice las siguientes 
 ---
 
 ## 🛠️ Configuración Paso a Paso
+🧱 FASE 0 — Precondiciones
 
-### 1. Preparación en Google Cloud
-1. **Proyecto:** Crea un nuevo proyecto en [Google Cloud Console](https://console.cloud.google.com/).
-2. **Habilitar API:** Activa la **Google Sheets API** desde la Library.
-3. **Credenciales:** Crea una **Service Account** (ej: `fastapi-sheets-sa`).
-4. **JSON Key:** Genera y descarga una llave en formato JSON. 
-    * ⚠️ **Seguridad:** No subas este archivo a Git; agrégalo a tu `.gitignore`.
+Vas a necesitar:
 
-### 2. Vinculación con el Sheet
-1. **Compartir:** Abre tu Google Sheet, haz clic en **Share** y agrega el email de la Service Account con permiso de **Editor**. *Sin esto recibirás un error 403 Forbidden*.
-2. **ID del Sheet:** Copia el ID desde la URL del navegador (el código entre `/d/` y `/edit`).
+✅ Un mail de Google nuevo (ya lo tenés)
+
+✅ Acceso a Google Drive
+
+✅ Acceso a Google Cloud Console
+
+👉 Todo lo que creemos va a pertenecer a ese mail.
+
+☁️ FASE 1 — Crear el proyecto en Google Cloud
+
+Entrá a:
+👉 https://console.cloud.google.com
+
+Arriba a la izquierda → Select project
+
+New Project
+
+Nombre: fastapi-sheets (o el que quieras)
+
+Organization: none
+
+Location: default
+
+Create
+
+📌 Asegurate de que el proyecto quede seleccionado arriba.
+
+📦 FASE 2 — Habilitar la API de Google Sheets
+
+Menú lateral → APIs & Services
+
+Library
+
+Buscá: Google Sheets API
+
+Click → Enable
+
+✔️ Esto es obligatorio, sin esto nada funciona.
+
+🔐 FASE 3 — Crear la Service Account (CLAVE)
+
+Esto NO es tu mail personal.
+Esto es el “usuario técnico” de la app.
+
+3.1 Crear Service Account
+
+IAM & Admin
+
+Service Accounts
+
+Create Service Account
+
+Datos:
+
+Name: fastapi-sheets-sa
+
+ID: automático
+
+Description: opcional
+
+→ Create and Continue
+
+3.2 Permisos (importante)
+
+En “Grant this service account access”:
+
+Role: Editor (simple y suficiente)
+
+→ Continue
+→ Done
+
+🪪 FASE 4 — Generar la clave JSON (credenciales)
+
+En Service Accounts
+
+Click en la cuenta recién creada
+
+Tab Keys
+
+Add Key
+
+Create new key
+
+Tipo: JSON
+
+Create
+
+📥 Se descarga un archivo tipo:
+
+fastapi-sheets-sa-123abc.json
+
+
+⚠️ ESTE ARCHIVO ES SECRETO
+⚠️ NO se commitea nunca
+
+📊 FASE 5 — Crear el Google Sheet
+
+Entrá a https://drive.google.com
+
+New → Google Sheets
+
+Nombre: Usuarios
+
+Primera hoja:
+
+Nombre: users
+
+Ejemplo de contenido:
+
+id	nombre	edad	email
+1	Ale	30	a@a.com
+🤝 FASE 6 — Compartir el Sheet con la Service Account
+
+ESTE PASO ES EL MÁS OLVIDADO.
+
+Abrí el Sheet
+
+Share
+
+Copiá del JSON:
+
+"client_email": "fastapi-sheets-sa@xxxx.iam.gserviceaccount.com"
+
+
+Pegalo como usuario
+
+Permiso: Editor
+
+Share
+
+📌 NO uses tu mail
+📌 USÁ EXACTAMENTE el client_email
+
+🆔 FASE 7 — Obtener el Spreadsheet ID
+
+Desde la URL:
+
+https://docs.google.com/spreadsheets/d/1ABCDEF123456/edit#gid=0
+
+
+El ID es:
+
+1ABCDEF123456
+
+🧪 FASE 8 — Preparar el .env (local)
+
+Abrí el JSON descargado y copiá TODO el contenido.
+
+.env
+SPREADSHEET_ID=1ABCDEF123456
+GOOGLE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"..."}
+
+
+⚠️ Todo en una sola línea
+⚠️ Comillas dobles escapadas si hace falta
+
+Ejemplo seguro:
+
+GOOGLE_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'
+
+🧠 FASE 9 — Código esperado (sanity check)
+
+Esto tiene que funcionar:
+
+creds = Credentials.from_service_account_info(
+    json.loads(os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")),
+    scopes=["https://www.googleapis.com/auth/spreadsheets"]
+)
+
+
+Si falla acá → SIEMPRE es:
+
+Sheet no compartido
+
+Mail incorrecto
+
+Proyecto equivocado
+
+API no habilitada
 
 ---
 

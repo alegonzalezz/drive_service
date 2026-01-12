@@ -4,17 +4,32 @@ from io import StringIO
 from application.models.excel_data import ExcelData
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+import os
+import json
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 SERVICE_ACCOUNT_FILE = "service-account.json"
 range="users"
 
 def get_sheets_service():
-    creds = Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE,
-        scopes=SCOPES
-    )
-    return build("sheets", "v4", credentials=creds)
+    service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+    print(service_account_json) 
+    if not service_account_json:
+        creds = Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE,
+            scopes=SCOPES
+        )
+        return build("sheets", "v4", credentials=creds)
+    else:
+        service_account_info = json.loads(service_account_json)
+        print("---------------------------")
+        print(service_account_info)
+        print("---------------------------")
+        creds = Credentials.from_service_account_info(
+            service_account_info,
+            scopes=SCOPES
+        )
+        return build("sheets", "v4", credentials=creds)
 
 
 def read_first_rows(sheet_id: str, limit: int = 10) -> list[dict]:
@@ -22,28 +37,6 @@ def read_first_rows(sheet_id: str, limit: int = 10) -> list[dict]:
     Infraestructura pura.
     Sabe cómo hablar con Google Sheets vía CSV.
     """
-
-#    url = (
-#        f"https://docs.google.com/spreadsheets/d/"
-#        f"{sheet_id}/export?format=csv"
-#    )
-
-#    response = requests.get(url)
-#    response.raise_for_status()
-#    print(response.text)
-#    csv_file = StringIO(response.text)
-#    reader = csv.DictReader(csv_file)
-#    rows: list[ExcelData] = []
-
-#    for i, row in enumerate(reader):
-#        if i >= limit:
-#            break
-#        rows.append(ExcelData(
-#                id=int(row["ID"]),
-#                nombre=row["Nombre"],
-#                edad=int(row["Edad"]),
-#                email=row["email"] if row["email"] else None,
-#            ))
 
     service = get_sheets_service()
     rows = service.spreadsheets().values().get(
