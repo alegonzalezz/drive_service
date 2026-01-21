@@ -1,7 +1,10 @@
 from fastapi import FastAPI
+import os
 from adapters.http.vercel.sheets_controller import router
-from dotenv import load_dotenv
-load_dotenv(override=False)
+if os.getenv("VERCEL") is None:
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
 
 app = FastAPI()
 app.include_router(router)
